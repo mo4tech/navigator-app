@@ -1,13 +1,14 @@
-import React, { createContext, useContext, useReducer, useMemo, useEffect, useCallback, useRef } from 'react';
+import { Driver } from '@fleetbase/sdk';
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { Platform } from 'react-native';
 import { EventRegister } from 'react-native-event-listeners';
-import { Driver } from '@fleetbase/sdk';
-import { later, isArray, navigatorConfig } from '../utils';
-import useStorage, { storage } from '../hooks/use-storage';
+import { LoginManager as FacebookLoginManager } from 'react-native-fbsdk-next';
 import useFleetbase from '../hooks/use-fleetbase';
+import useStorage, { storage } from '../hooks/use-storage';
+import { later, navigatorConfig } from '../utils';
+import { useConfig } from './ConfigContext';
 import { useLanguage } from './LanguageContext';
 import { useNotification } from './NotificationContext';
-import { LoginManager as FacebookLoginManager } from 'react-native-fbsdk-next';
 
 const AuthContext = createContext();
 
@@ -36,6 +37,7 @@ export const AuthProvider = ({ children }) => {
     const { fleetbase, adapter } = useFleetbase();
     const { setLocale } = useLanguage();
     const { deviceToken } = useNotification();
+    const { resolveConnectionConfig } = useConfig();
     const [storedDriver, setStoredDriver] = useStorage('driver');
     const [organizations, setOrganizations] = useStorage('organizations', []);
     const [authToken, setAuthToken] = useStorage('_driver_token');
@@ -50,6 +52,7 @@ export const AuthProvider = ({ children }) => {
     });
     const organizationsLoadedRef = useRef(false);
     const loadOrganizationsPromiseRef = useRef();
+    const BACKEND_URL = resolveConnectionConfig('BACKEND_URL', 'http://localhost:4000');
 
     // Restore session on app load
     useEffect(() => {
@@ -232,20 +235,34 @@ export const AuthProvider = ({ children }) => {
         [fleetbase]
     );
 
-    // Login: Send verification code
+    // Login: Send verification code via custom backend
     const login = useCallback(
         async (phone) => {
             dispatch({ type: 'LOGIN', phone, isSendingCode: true });
             try {
-                const { method } = await fleetbase.drivers.login(phone);
-                dispatch({ type: 'LOGIN', phone, isSendingCode: false, loginMethod: method ?? 'sms' });
+                const response = await fetch(`${BACKEND_URL}/auth/send-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ phoneNumber: phone }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to send OTP');
+                }
+
+                const data = await response.json();
+                console.log('[AuthContext] OTP sent:', data.otp); // For testing - remove in production
+                dispatch({ type: 'LOGIN', phone, isSendingCode: false, loginMethod: 'sms' });
             } catch (error) {
                 dispatch({ type: 'LOGIN', phone, isSendingCode: false });
                 console.warn('[AuthContext] Login failed:', error);
                 throw error;
             }
         },
-        [fleetbase]
+        [BACKEND_URL]
     );
 
     // Remove local session data
@@ -258,12 +275,31 @@ export const AuthProvider = ({ children }) => {
         FacebookLoginManager.logOut();
     };
 
-    // Verify code
+    // Verify code via custom backend, then authenticate with Fleetbase
     const verifyCode = useCallback(
         async (code) => {
             dispatch({ type: 'VERIFY', isVerifyingCode: true });
             try {
-                const driver = await fleetbase.drivers.verifyCode(state.phone, code);
+                // First verify OTP with custom backend
+                const verifyResponse = await fetch(`${BACKEND_URL}/auth/verify-otp`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ phoneNumber: state.phone, otp: code }),
+                });
+
+                if (!verifyResponse.ok) {
+                    const error = await verifyResponse.json();
+                    throw new Error(error.error || 'Invalid OTP');
+                }
+
+                // OTP verified successfully, now authenticate with Fleetbase
+                // Use adapter to call Fleetbase's driver login endpoint
+                const driver = await adapter.post('drivers/login-with-phone', { 
+                    phone: state.phone 
+                });
+                
                 createDriverSession(driver);
                 dispatch({ type: 'VERIFY', driver, isVerifyingCode: false });
             } catch (error) {
@@ -272,7 +308,7 @@ export const AuthProvider = ({ children }) => {
                 throw error;
             }
         },
-        [fleetbase, state.phone, setDriver]
+        [adapter, state.phone, BACKEND_URL]
     );
 
     // Create a session from driver data/JSON

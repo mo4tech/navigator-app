@@ -1,14 +1,15 @@
-import React, { createContext, useState, useContext, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import { createContext, ReactNode, useCallback, useContext, useMemo } from 'react';
 import Env from 'react-native-config';
 import Config from '../../navigator.config';
-import { navigatorConfig, config, toBoolean, get } from '../utils';
 import useStorage from '../hooks/use-storage';
+import { config, get, navigatorConfig, toBoolean } from '../utils';
 
 const ConfigContext = createContext();
 
 export const ConfigProvider = ({ children }: { children: ReactNode }) => {
     const [instanceLinkedFleetbaseHost, setInstanceLinkedFleetbaseHost] = useStorage('INSTANCE_LINK_FLEETBASE_HOST');
     const [instanceLinkedFleetbaseKey, setInstanceLinkedFleetbaseKey] = useStorage('INSTANCE_LINK_FLEETBASE_KEY');
+    const [instanceLinkedBackendUrl, setInstanceLinkedBackendUrl] = useStorage('INSTANCE_LINK_BACKEND_URL');
     const [instanceLinkedSocketclusterHost, setInstanceLinkedSocketclusterHost] = useStorage('INSTANCE_LINK_SOCKETCLUSTER_HOST');
     const [instanceLinkedSocketclusterPort, setInstanceLinkedSocketclusterPort] = useStorage('INSTANCE_LINK_SOCKETCLUSTER_PORT');
     const [instanceLinkedSocketclusterSecure, setInstanceLinkedSocketclusterSecure] = useStorage('INSTANCE_LINK_SOCKETCLUSTER_SECURE');
@@ -24,6 +25,9 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
                 case 'FLEETBASE_KEY':
                     setInstanceLinkedFleetbaseKey(value);
                     break;
+                case 'BACKEND_URL':
+                    setInstanceLinkedBackendUrl(value);
+                    break;
                 case 'SC_HOST':
                 case 'SOCKETCLUSTER_HOST':
                     setInstanceLinkedSocketclusterHost(value);
@@ -38,32 +42,35 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
                     break;
             }
         },
-        [setInstanceLinkedFleetbaseHost, setInstanceLinkedFleetbaseKey, setInstanceLinkedSocketclusterHost, setInstanceLinkedSocketclusterPort, setInstanceLinkedSocketclusterSecure]
+        [setInstanceLinkedFleetbaseHost, setInstanceLinkedFleetbaseKey, setInstanceLinkedBackendUrl, setInstanceLinkedSocketclusterHost, setInstanceLinkedSocketclusterPort, setInstanceLinkedSocketclusterSecure]
     );
 
     const getInstanceLinkConfig = useCallback(() => {
         return {
             FLEETBASE_HOST: instanceLinkedFleetbaseHost,
             FLEETBASE_KEY: instanceLinkedFleetbaseKey,
+            BACKEND_URL: instanceLinkedBackendUrl,
             SOCKETCLUSTER_HOST: instanceLinkedSocketclusterHost,
             SOCKETCLUSTER_PORT: instanceLinkedSocketclusterPort,
             SOCKETCLUSTER_SECURE: instanceLinkedSocketclusterSecure,
         };
-    }, [instanceLinkedFleetbaseHost, instanceLinkedFleetbaseKey, instanceLinkedSocketclusterHost, instanceLinkedSocketclusterPort, instanceLinkedSocketclusterSecure]);
+    }, [instanceLinkedFleetbaseHost, instanceLinkedFleetbaseKey, instanceLinkedBackendUrl, instanceLinkedSocketclusterHost, instanceLinkedSocketclusterPort, instanceLinkedSocketclusterSecure]);
 
     const clearInstanceLinkConfig = useCallback(() => {
         setInstanceLinkedFleetbaseHost(undefined);
         setInstanceLinkedFleetbaseKey(undefined);
+        setInstanceLinkedBackendUrl(undefined);
         setInstanceLinkedSocketclusterHost(undefined);
         setInstanceLinkedSocketclusterPort(undefined);
         setInstanceLinkedSocketclusterSecure(undefined);
-    }, [setInstanceLinkedFleetbaseHost, setInstanceLinkedFleetbaseKey, setInstanceLinkedSocketclusterHost, setInstanceLinkedSocketclusterPort, setInstanceLinkedSocketclusterSecure]);
+    }, [setInstanceLinkedFleetbaseHost, setInstanceLinkedFleetbaseKey, setInstanceLinkedBackendUrl, setInstanceLinkedSocketclusterHost, setInstanceLinkedSocketclusterPort, setInstanceLinkedSocketclusterSecure]);
 
     const resolveConnectionConfig = useCallback(
         (key, defaultValue = null) => {
             const fullConfig = {
                 FLEETBASE_HOST: instanceLinkedFleetbaseHost ?? config('FLEETBASE_HOST'),
                 FLEETBASE_KEY: instanceLinkedFleetbaseKey ?? config('FLEETBASE_KEY'),
+                BACKEND_URL: instanceLinkedBackendUrl ?? config('BACKEND_URL', 'http://localhost:4000'),
                 SOCKETCLUSTER_HOST: instanceLinkedSocketclusterHost ?? config('SOCKETCLUSTER_HOST', 'socket.fleetbase.io'),
                 SOCKETCLUSTER_PORT: parseInt(instanceLinkedSocketclusterPort ?? config('SOCKETCLUSTER_PORT', '8000')),
                 SOCKETCLUSTER_SECURE: toBoolean(instanceLinkedSocketclusterSecure ?? config('SOCKETCLUSTER_SECURE', true)),
@@ -72,7 +79,7 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
 
             return get(fullConfig, key, defaultValue);
         },
-        [instanceLinkedFleetbaseHost, instanceLinkedFleetbaseKey, instanceLinkedSocketclusterHost, instanceLinkedSocketclusterPort, instanceLinkedSocketclusterSecure]
+        [instanceLinkedFleetbaseHost, instanceLinkedFleetbaseKey, instanceLinkedBackendUrl, instanceLinkedSocketclusterHost, instanceLinkedSocketclusterPort, instanceLinkedSocketclusterSecure]
     );
 
     const value = useMemo(() => {
@@ -86,6 +93,7 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
             resolveConnectionConfig,
             setInstanceLinkedFleetbaseHost,
             setInstanceLinkedFleetbaseKey,
+            setInstanceLinkedBackendUrl,
             setInstanceLinkedSocketclusterHost,
             setInstanceLinkedSocketclusterPort,
             setInstanceLinkedSocketclusterSecure,
@@ -97,6 +105,7 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
         resolveConnectionConfig,
         setInstanceLinkedFleetbaseHost,
         setInstanceLinkedFleetbaseKey,
+        setInstanceLinkedBackendUrl,
         setInstanceLinkedSocketclusterHost,
         setInstanceLinkedSocketclusterPort,
         setInstanceLinkedSocketclusterSecure,
@@ -105,6 +114,7 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
         // Instance link config values
         instanceLinkedFleetbaseHost,
         instanceLinkedFleetbaseKey,
+        instanceLinkedBackendUrl,
         instanceLinkedSocketclusterHost,
         instanceLinkedSocketclusterPort,
         instanceLinkedSocketclusterSecure,

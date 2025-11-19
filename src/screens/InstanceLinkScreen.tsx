@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+import { Alert, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScrollView, Alert } from 'react-native';
-import { YStack, Text, Input, Switch, Button } from 'tamagui';
+import { Button, Input, Switch, Text, YStack } from 'tamagui';
 import { useConfig } from '../contexts/ConfigContext';
-import { toBoolean } from '../utils';
 import useAppTheme from '../hooks/use-app-theme';
+import { toBoolean } from '../utils';
 
 const InstanceLinkScreen = () => {
     const navigation = useNavigation();
@@ -14,6 +14,7 @@ const InstanceLinkScreen = () => {
     const { instanceLinkConfig, setInstanceLinkConfig, clearInstanceLinkConfig } = useConfig();
     const [fleetbaseHost, setFleetbaseHost] = useState(instanceLinkConfig.FLEETBASE_HOST);
     const [fleetbaseKey, setFleetbaseKey] = useState(instanceLinkConfig.FLEETBASE_KEY);
+    const [backendUrl, setBackendUrl] = useState(instanceLinkConfig.BACKEND_URL);
     const [socketClusterHost, setSocketClusterHost] = useState(instanceLinkConfig.SOCKETCLUSTER_HOST);
     const [socketClusterPort, setSocketClusterPort] = useState(instanceLinkConfig.SOCKETCLUSTER_PORT);
     const [socketClusterSecure, setSocketClusterSecure] = useState(toBoolean(instanceLinkConfig.SOCKETCLUSTER_SECURE));
@@ -21,22 +22,24 @@ const InstanceLinkScreen = () => {
     const handleSave = useCallback(() => {
         setInstanceLinkConfig('FLEETBASE_HOST', fleetbaseHost);
         setInstanceLinkConfig('FLEETBASE_KEY', fleetbaseKey);
+        setInstanceLinkConfig('BACKEND_URL', backendUrl);
         setInstanceLinkConfig('SOCKETCLUSTER_HOST', socketClusterHost);
         setInstanceLinkConfig('SOCKETCLUSTER_PORT', socketClusterPort);
         setInstanceLinkConfig('SOCKETCLUSTER_SECURE', socketClusterSecure);
 
         Alert.alert('Instance connection config saved successfully.');
-    }, [setInstanceLinkConfig, fleetbaseHost, fleetbaseKey, socketClusterHost, socketClusterPort, socketClusterSecure]);
+    }, [setInstanceLinkConfig, fleetbaseHost, fleetbaseKey, backendUrl, socketClusterHost, socketClusterPort, socketClusterSecure]);
 
     const handleReset = useCallback(() => {
         clearInstanceLinkConfig();
         setFleetbaseHost(null);
         setFleetbaseKey(null);
+        setBackendUrl(null);
         setSocketClusterHost(null);
         setSocketClusterPort(null);
         setSocketClusterSecure(null);
         Alert.alert('Instance connection config reset successfully.');
-    }, [clearInstanceLinkConfig, setFleetbaseHost, setFleetbaseKey, setSocketClusterHost, setSocketClusterPort, setSocketClusterSecure]);
+    }, [clearInstanceLinkConfig, setFleetbaseHost, setFleetbaseKey, setBackendUrl, setSocketClusterHost, setSocketClusterPort, setSocketClusterSecure]);
 
     return (
         <YStack flex={1} bg='$background' position='relative'>
@@ -69,6 +72,25 @@ const InstanceLinkScreen = () => {
                             value={fleetbaseKey}
                             onChangeText={(text) => setFleetbaseKey(text)}
                             placeholder='Input API Key for Fleetbase instance...'
+                            borderWidth={1}
+                            color='$textPrimary'
+                            borderColor='$borderColor'
+                            borderRadius='$5'
+                            bg='$surface'
+                            autoCapitalize={false}
+                            autoComplete='off'
+                            autoCorrect={false}
+                            placeholderTextColor={isDarkMode ? '$gray-700' : '$gray-400'}
+                        />
+                    </YStack>
+                    <YStack space='$2'>
+                        <Text color='$textPrimary' fontWeight='bold'>
+                            SCRIPT BACKEND URL
+                        </Text>
+                        <Input
+                            value={backendUrl}
+                            onChangeText={(text) => setBackendUrl(text)}
+                            placeholder='Input backend URL (e.g., http://localhost:4000)...'
                             borderWidth={1}
                             color='$textPrimary'
                             borderColor='$borderColor'
