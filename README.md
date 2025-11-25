@@ -70,6 +70,7 @@ APP_IDENTIFIER=io.fleetbase.navigator
 APP_LINK_PREFIX=navigator://
 FLEETBASE_HOST=https://api.fleetbase.io
 FLEETBASE_KEY=
+BACKEND_URL=http://localhost:4000
 ```
 
 ### Running in Simulator

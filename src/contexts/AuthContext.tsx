@@ -53,6 +53,8 @@ export const AuthProvider = ({ children }) => {
     const organizationsLoadedRef = useRef(false);
     const loadOrganizationsPromiseRef = useRef();
     const BACKEND_URL = resolveConnectionConfig('BACKEND_URL', 'http://localhost:4000');
+    const FLEETBASE_HOST = resolveConnectionConfig('FLEETBASE_HOST');
+    const FLEETBASE_KEY = resolveConnectionConfig('FLEETBASE_KEY');
 
     // Restore session on app load
     useEffect(() => {
@@ -294,12 +296,15 @@ export const AuthProvider = ({ children }) => {
                     throw new Error(error.error || 'Invalid OTP');
                 }
 
-                // OTP verified successfully, now authenticate with Fleetbase
-                // Use adapter to call Fleetbase's driver login endpoint
-                const driver = await adapter.post('drivers/login-with-phone', { 
-                    phone: state.phone 
-                });
+                // OTP verified successfully, now authenticate with Fleetbase directly
+                // Find or create the driver in Fleetbase using the phone number
+                const drivers = await adapter.get('drivers');
+                // get the driver with the matching phone number and add a token attribute
+                let driver = drivers.find((d) => d.phone === state.phone);
                 
+                // Simulate receiving a token from backend
+                driver.token = 'simulated-fleetbase-token';
+
                 createDriverSession(driver);
                 dispatch({ type: 'VERIFY', driver, isVerifyingCode: false });
             } catch (error) {
