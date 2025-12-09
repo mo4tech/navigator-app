@@ -70,7 +70,7 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
             const fullConfig = {
                 FLEETBASE_HOST: instanceLinkedFleetbaseHost ?? config('FLEETBASE_HOST'),
                 FLEETBASE_KEY: instanceLinkedFleetbaseKey ?? config('FLEETBASE_KEY'),
-                BACKEND_URL: instanceLinkedBackendUrl ?? config('BACKEND_URL', 'http://localhost:4000'),
+                BACKEND_URL: instanceLinkedBackendUrl ?? config('BACKEND_URL'),
                 SOCKETCLUSTER_HOST: instanceLinkedSocketclusterHost ?? config('SOCKETCLUSTER_HOST', 'socket.fleetbase.io'),
                 SOCKETCLUSTER_PORT: parseInt(instanceLinkedSocketclusterPort ?? config('SOCKETCLUSTER_PORT', '8000')),
                 SOCKETCLUSTER_SECURE: toBoolean(instanceLinkedSocketclusterSecure ?? config('SOCKETCLUSTER_SECURE', true)),

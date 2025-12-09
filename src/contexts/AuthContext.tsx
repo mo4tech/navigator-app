@@ -52,9 +52,7 @@ export const AuthProvider = ({ children }) => {
     });
     const organizationsLoadedRef = useRef(false);
     const loadOrganizationsPromiseRef = useRef();
-    const BACKEND_URL = resolveConnectionConfig('BACKEND_URL', 'http://localhost:4000');
-    const FLEETBASE_HOST = resolveConnectionConfig('FLEETBASE_HOST');
-    const FLEETBASE_KEY = resolveConnectionConfig('FLEETBASE_KEY');
+    const BACKEND_URL = resolveConnectionConfig('BACKEND_URL');
 
     // Restore session on app load
     useEffect(() => {

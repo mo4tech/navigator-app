@@ -6,6 +6,6 @@ import App from './App';
 import { name as appName } from './app.json';
 
 // Enable RTL layout support
-I18nManager.allowRTL(true);
+I18nManager.allowRTL(false);
 
 AppRegistry.registerComponent(appName, () => App);

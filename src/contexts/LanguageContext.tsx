@@ -45,9 +45,9 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         // Force RTL layout for RTL languages
         const isRTL = RTL_LANGUAGES.includes(newLocale);
         if (I18nManager.isRTL !== isRTL) {
-            I18nManager.forceRTL(isRTL);
             // Note: App needs to be reloaded for RTL changes to take effect
             // You can add RNRestart.Restart() here if you have react-native-restart installed
+            // I18nManager.forceRTL(isRTL);
         }
     };
 
@@ -57,7 +57,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         // Set initial RTL direction based on current locale
         const isRTL = RTL_LANGUAGES.includes(locale);
         if (I18nManager.isRTL !== isRTL) {
-            I18nManager.forceRTL(isRTL);
+            // I18nManager.forceRTL(isRTL);
         }
     }, []);
 
