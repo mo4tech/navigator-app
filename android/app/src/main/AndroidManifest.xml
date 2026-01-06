@@ -2,29 +2,64 @@
   xmlns:tools="http://schemas.android.com/tools">
 
   <uses-permission android:name="android.permission.INTERNET" />
-  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-  <uses-permission android:name="android.permission.VIBRATE" />
-  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-  <uses-permission android:name="android.permission.CAMERA" />
-  <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-  <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
-  <uses-permission android:name="android.permission.INTERNET"/>
-  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-  <application 
-    android:name=".MainApplication" 
+  <uses-permission
+    android:name="android.permission.ACCESS_COARSE_LOCATION" />
+  <uses-permission
+    android:name="android.permission.ACCESS_FINE_LOCATION" />
+  <uses-permission
+    android:name="android.permission.VIBRATE" />
+  <uses-permission
+    android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+  <uses-permission
+    android:name="android.permission.CAMERA" />
+  <uses-permission
+    android:name="android.permission.READ_MEDIA_IMAGES" />
+  <uses-permission
+    android:name="android.permission.READ_MEDIA_VIDEO" />
+  <uses-permission
+    android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+  <uses-permission
+    android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+  <uses-permission
+    android:name="android.permission.INTERNET" />
+  <uses-permission
+    android:name="android.permission.POST_NOTIFICATIONS" />
+  <uses-permission
+    android:name="android.permission.BIND_TELECOM_CONNECTION_SERVICE" />
+  <uses-permission
+    android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission
+    android:name="android.permission.READ_PHONE_STATE" />
+  <uses-permission
+    android:name="android.permission.CALL_PHONE" />
+  <uses-permission
+    android:name="android.permission.RECORD_AUDIO" />
+  <uses-permission
+    android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+  <uses-permission
+    android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+  <application
+    android:name=".MainApplication"
     android:label="@string/app_name"
-    android:icon="@mipmap/ic_launcher" 
+    android:icon="@mipmap/ic_launcher"
     android:roundIcon="@mipmap/ic_launcher_round"
-    android:theme="@style/AppTheme" 
+    android:theme="@style/AppTheme"
     android:networkSecurityConfig="@xml/network_security_config"
-    android:dataExtractionRules="@xml/data_extraction_rules" 
+    android:dataExtractionRules="@xml/data_extraction_rules"
     android:fullBackupContent="true"
     tools:targetApi="s"
     android:supportsRtl="true"
-    >
+  >
+    <service android:name="io.wazo.callkeep.RNCallKeepBackgroundMessagingService" />
+    <service android:name="io.wazo.callkeep.VoiceConnectionService"
+      android:label="Wazo"
+      android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE"
+      android:foregroundServiceType="camera|microphone"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.telecom.ConnectionService" />
+      </intent-filter>
+    </service>
     <activity android:name=".MainActivity"
       android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
       android:launchMode="singleTask" android:windowSoftInputMode="adjustResize"
@@ -34,20 +69,24 @@
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
-
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
         <data android:scheme="${appLinkScheme}" />
-    </intent-filter>
+      </intent-filter>
     </activity>
-    <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_notification" />
-    <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/colorAccent" />
-    <meta-data android:name="com.transistorsoft.locationmanager.license" android:value="@string/TRANSISTORSOFT_LICENSE_KEY" />
-    <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/FACEBOOK_APP_ID"/>
-    <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/FACEBOOK_CLIENT_TOKEN"/>
-    <meta-data android:name="com.google.android.geo.API_KEY" android:value="@string/GOOGLE_MAPS_API_KEY" />
+    <meta-data android:name="com.google.firebase.messaging.default_notification_icon"
+      android:resource="@drawable/ic_notification" />
+    <meta-data android:name="com.google.firebase.messaging.default_notification_color"
+      android:resource="@color/colorAccent" tools:replace="android:resource" />
+    <meta-data android:name="com.transistorsoft.locationmanager.license"
+      android:value="@string/TRANSISTORSOFT_LICENSE_KEY" />
+    <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/FACEBOOK_APP_ID" />
+    <meta-data android:name="com.facebook.sdk.ClientToken"
+      android:value="@string/FACEBOOK_CLIENT_TOKEN" />
+    <meta-data android:name="com.google.android.geo.API_KEY"
+      android:value="@string/GOOGLE_MAPS_API_KEY" />
   </application>
   <queries>
     <package android:name="com.facebook.katana" />
@@ -64,7 +103,8 @@
     </intent>
     <intent>
       <action android:name="android.intent.action.VIEW" />
-      <data android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+      <data
+        android:mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
     </intent>
     <intent>
       <action android:name="android.intent.action.VIEW" />
@@ -72,7 +112,8 @@
     </intent>
     <intent>
       <action android:name="android.intent.action.VIEW" />
-      <data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation" />
+      <data
+        android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation" />
     </intent>
     <intent>
       <action android:name="android.intent.action.VIEW" />
@@ -80,11 +121,11 @@
     </intent>
     <intent>
       <action android:name="android.intent.action.VIEW" />
-      <data android:scheme="http"/>
+      <data android:scheme="http" />
     </intent>
     <intent>
       <action android:name="android.intent.action.VIEW" />
-      <data android:scheme="https"/>
+      <data android:scheme="https" />
     </intent>
     <intent>
       <action android:name="android.intent.action.VIEW" />

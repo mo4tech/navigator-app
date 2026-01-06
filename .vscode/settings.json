@@ -16,5 +16,8 @@
     },
     "[swift]": {
         "editor.defaultFormatter": "vknabel.vscode-swiftformat"
+    },
+    "[xml]": {
+        "editor.defaultFormatter": "redhat.vscode-xml"
     }
 }
