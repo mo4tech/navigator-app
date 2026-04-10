@@ -3,7 +3,7 @@ import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useNavigation } from '@react-navigation/native';
 import { useCallback, useMemo } from 'react';
-import { FlatList, Pressable, SafeAreaView } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, SafeAreaView } from 'react-native';
 import { Avatar, Separator, Text, useTheme, XStack, YStack } from 'tamagui';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -14,6 +14,16 @@ const DriverProfileScreen = () => {
     const navigation = useNavigation();
     const { t } = useLanguage();
     const { driver, logout, switchOrganization, organizations } = useAuth();
+
+    if (!driver || typeof driver.getAttribute !== 'function') {
+        return (
+            <SafeAreaView style={{ flex: 1, backgroundColor: theme.background.val }}>
+                <YStack flex={1} alignItems='center' justifyContent='center'>
+                    <ActivityIndicator />
+                </YStack>
+            </SafeAreaView>
+        );
+    }
 
     const handlePressMenuItem = useCallback(
         (item) => {

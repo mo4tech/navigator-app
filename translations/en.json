@@ -32,7 +32,8 @@
         "title": "Login via SMS",
         "sendVerificationCode": "Send Verification Code",
         "home": "Home",
-        "invalidPhoneNumber": "Invalid phone number provided."
+        "invalidPhoneNumber": "Invalid phone number provided.",
+        "driverNotFound": "No account found with this phone number."
     },
     "PhoneLoginVerifyScreen": {
         "codeSentTo": "Code sent to {{phone}}",

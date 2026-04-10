@@ -6,6 +6,7 @@ import { LoginManager as FacebookLoginManager } from 'react-native-fbsdk-next';
 import useFleetbase from '../hooks/use-fleetbase';
 import useStorage, { storage } from '../hooks/use-storage';
 import { later, navigatorConfig } from '../utils';
+import { translate } from '../utils/localize';
 import { useConfig } from './ConfigContext';
 import { useLanguage } from './LanguageContext';
 import { useNotification } from './NotificationContext';
@@ -227,8 +228,8 @@ export const AuthProvider = ({ children }) => {
             dispatch({ type: 'VERIFY', isVerifyingCode: true });
             try {
                 const driver = await fleetbase.drivers.create(phone, code, attributes);
-                createDriverSession(driver);
-                dispatch({ type: 'VERIFY', driver });
+                const driverInstance = await createDriverSession(driver);
+                dispatch({ type: 'VERIFY', driver: driverInstance });
             } catch (error) {
                 console.warn('[AuthContext] Account creation verification failed:', error);
                 throw error;
@@ -244,6 +245,13 @@ export const AuthProvider = ({ children }) => {
         async (phone) => {
             dispatch({ type: 'LOGIN', phone, isSendingCode: true });
             try {
+                // Check if a driver with this phone number exists before sending OTP
+                const drivers = await adapter.get('drivers');
+                const driverExists = drivers.some((d) => d.phone === phone);
+                if (!driverExists) {
+                    throw new Error(translate('PhoneLoginScreen.driverNotFound'));
+                }
+
                 const response = await fetch(`${BACKEND_URL}/auth/send-otp`, {
                     method: 'POST',
                     headers: {
@@ -266,7 +274,7 @@ export const AuthProvider = ({ children }) => {
                 throw error;
             }
         },
-        [BACKEND_URL]
+        [BACKEND_URL, adapter]
     );
 
     // Remove local session data
@@ -304,8 +312,8 @@ export const AuthProvider = ({ children }) => {
                 // get the driver with the matching phone number and add a token attribute
                 let driver = drivers.find((d) => d.phone === state.phone);
 
-                createDriverSession(driver);
-                dispatch({ type: 'VERIFY', driver, isVerifyingCode: false });
+                const driverInstance = await createDriverSession(driver);
+                dispatch({ type: 'VERIFY', driver: driverInstance, isVerifyingCode: false });
             } catch (error) {
                 console.warn('[AuthContext] Code verification failed:', error);
                 dispatch({ type: 'VERIFY', isVerifyingCode: false });

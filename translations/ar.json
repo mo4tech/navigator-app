@@ -32,7 +32,8 @@
         "title": "تسجيل الدخول عبر الرسائل النصية",
         "sendVerificationCode": "إرسال رمز التحقق",
         "home": "الرئيسية",
-        "invalidPhoneNumber": "رقم الهاتف المقدم غير صحيح."
+        "invalidPhoneNumber": "رقم الهاتف المقدم غير صحيح.",
+        "driverNotFound": "لا يوجد حساب مرتبط برقم الهاتف هذا."
     },
     "PhoneLoginVerifyScreen": {
         "codeSentTo": "تم إرسال الرمز إلى {{phone}}",

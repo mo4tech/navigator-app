@@ -15,6 +15,20 @@ function restoreCollection(collection, adapter) {
     return collection.map((json) => new Order(json, adapter));
 }
 
+/**
+ * Sort orders by meta.sort_index (ascending). Orders without a sort_index
+ * are placed at the end, preserving their relative order.
+ */
+function sortBySortIndex(orders) {
+    return [...orders].sort((a, b) => {
+        const aIndex = a.meta?.sort_index ?? a.getAttribute?.('meta.sort_index');
+        const bIndex = b.meta?.sort_index ?? b.getAttribute?.('meta.sort_index');
+        const aVal = aIndex != null ? Number(aIndex) : Infinity;
+        const bVal = bIndex != null ? Number(bIndex) : Infinity;
+        return aVal - bVal;
+    });
+}
+
 const OrderManagerContext = createContext(null);
 
 export const OrderManagerProvider: React.FC = ({ children }) => {
@@ -285,11 +299,11 @@ export const OrderManagerProvider: React.FC = ({ children }) => {
             queryOrders,
             currentDate,
             setCurrentDate,
-            allRecentOrders: restoreCollection(allRecentOrders, adapter),
-            recentActiveOrders: restoreCollection(recentActiveOrders, adapter),
-            allActiveOrders: restoreCollection(allActiveOrders, adapter),
-            ordersToday: restoreCollection(ordersToday, adapter),
-            currentOrders: restoreCollection(currentOrders, adapter),
+            allRecentOrders: sortBySortIndex(restoreCollection(allRecentOrders, adapter)),
+            recentActiveOrders: sortBySortIndex(restoreCollection(recentActiveOrders, adapter)),
+            allActiveOrders: sortBySortIndex(restoreCollection(allActiveOrders, adapter)),
+            ordersToday: sortBySortIndex(restoreCollection(ordersToday, adapter)),
+            currentOrders: sortBySortIndex(restoreCollection(currentOrders, adapter)),
             nearbyOrders: restoreCollection(nearbyOrders, adapter),
             reloadOrders,
             reloadRecentOrders,

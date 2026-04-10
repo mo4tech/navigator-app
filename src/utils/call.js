@@ -24,10 +24,25 @@ const initializeCallKeep = async () => {
                 okButton: 'OK',
                 additionalPermissions: [],
                 selfManaged: false,
+                // Required for release builds
+                foregroundService: {
+                    channelId: 'io.fleetbase.navigator.call',
+                    channelName: 'Incoming Calls',
+                    notificationTitle: 'Incoming call',
+                    notificationIcon: 'ic_notification',
+                },
             },
         };
 
         await RNCallKeep.setup(options);
+
+        // Register phone account with Android Telecom - required for release builds
+        if (Platform.OS === 'android') {
+            RNCallKeep.registerPhoneAccount(options);
+            RNCallKeep.registerAndroidEvents();
+            RNCallKeep.setAvailable(true);
+        }
+
         isCallKeepInitialized = true;
         return true;
     } catch (error) {
