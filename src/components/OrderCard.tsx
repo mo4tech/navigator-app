@@ -64,6 +64,7 @@ export const OrderCard = ({ order, onPress }) => {
                             width='100%'
                             borderRadius='$4'
                             scrollEnabled={false}
+                            followCurrentWaypoint
                         />
                     </YStack>
                     <YStack>

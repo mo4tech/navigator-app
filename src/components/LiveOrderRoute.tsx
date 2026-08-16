@@ -22,6 +22,10 @@ const LiveOrderRoute = ({
     edgePaddingRight = 50,
     scrollEnabled = true,
     focusCurrentDestination = false,
+    // When true, the route reflects the driver's active leg: the destination follows
+    // `payload.current_waypoint` (which the backend advances as the driver updates the
+    // order status), so before pickup it points at the vendor and after pickup at the customer.
+    followCurrentWaypoint = false,
     ...props
 }) => {
     const { adapter } = useFleetbase();
@@ -31,25 +35,42 @@ const LiveOrderRoute = ({
     const dropoff = order.getAttribute('payload.dropoff');
     const waypoints = order.getAttribute('payload.waypoints', []) ?? [];
 
-    // Determine the start waypoint (always use pickup for consistency)
-    const startWaypoint = !pickup && waypoints.length > 0 ? waypoints[0] : pickup;
-    const start = restoreFleetbasePlace(startWaypoint, adapter);
+    let startWaypoint;
+    let endWaypoint;
+    let middleWaypointsSource = [];
 
-    // Determine the end waypoint
-    const endWaypoint = !dropoff && waypoints.length > 0 && last(waypoints) !== first(waypoints) ? last(waypoints) : dropoff;
+    if (followCurrentWaypoint) {
+        // Ordered list of every stop the driver moves through.
+        const locations = [pickup, ...waypoints, dropoff].filter(Boolean);
+        const currentWaypoint = order.getAttribute('payload.current_waypoint');
+        const currentIndex = locations.findIndex((place) => place?.id === currentWaypoint);
+
+        // Destination = the leg the driver is currently heading to (fallback to final stop).
+        endWaypoint = currentIndex >= 0 ? locations[currentIndex] : last(locations);
+        // Origin = the previous stop (e.g. the vendor once the order is picked up).
+        startWaypoint = currentIndex > 0 ? locations[currentIndex - 1] : first(locations);
+    } else {
+        // Determine the start waypoint (always use pickup for consistency)
+        startWaypoint = !pickup && waypoints.length > 0 ? waypoints[0] : pickup;
+
+        // Determine the end waypoint
+        endWaypoint = !dropoff && waypoints.length > 0 && last(waypoints) !== first(waypoints) ? last(waypoints) : dropoff;
+
+        // Get only the "middle" waypoints (excluding the first and last ones)
+        middleWaypointsSource = focusCurrentDestination ? [] : waypoints.slice(1, -1);
+    }
+
+    const start = restoreFleetbasePlace(startWaypoint, adapter);
     const end = restoreFleetbasePlace(endWaypoint, adapter);
 
     // Get the coordinates for start and end places
     const origin = getPlaceCoords(start);
     const destination = getPlaceCoords(end);
 
-    // Get only the "middle" waypoints (excluding the first and last ones)
-    const middleWaypoints = focusCurrentDestination
-        ? []
-        : waypoints.slice(1, -1).map((waypoint) => ({
-              ...getPlaceCoords(waypoint),
-              label: waypoint.address,
-          }));
+    const middleWaypoints = middleWaypointsSource.map((waypoint) => ({
+        ...getPlaceCoords(waypoint),
+        label: waypoint.address,
+    }));
 
     return (
         <YStack flex={1} position='relative' overflow='hidden' width={width} height={height} {...props}>
