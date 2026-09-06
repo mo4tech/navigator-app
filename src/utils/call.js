@@ -1,8 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
+import { DeviceEventEmitter, Platform } from 'react-native';
 import RNCallKeep from 'react-native-callkeep';
 
 const callerName = "New Order";
+
+// Emitted when the driver answers the incoming call for an order. The payload is
+// the order id, since that's what is used as the call UUID.
+export const ORDER_CALL_ANSWERED = 'order:call-answered';
+
+// An order should be able to ring again if it's re-dispatched, so the dedupe
+// record expires rather than living forever.
+const CALL_DEDUPE_PREFIX = 'callkeep:order:';
+const CALL_DEDUPE_TTL_MS = 5 * 60 * 1000;
 
 // Track initialization state
 let isCallKeepInitialized = false;
@@ -60,22 +69,21 @@ const setupCallKeepListeners = () => {
             return;
         }
 
+        // Driver chose to view the order: bring the app forward and let the app
+        // layer navigate to the order the call was raised for.
         RNCallKeep.addEventListener('answerCall', ({ callUUID }) => {
             try {
                 RNCallKeep.endCall(callUUID);
                 RNCallKeep.backToForeground();
+                DeviceEventEmitter.emit(ORDER_CALL_ANSWERED, callUUID);
             } catch (error) {
                 console.error('Error in answerCall handler:', error);
             }
         });
 
-        RNCallKeep.addEventListener('endCall', () => {
-            try {
-                RNCallKeep.backToForeground();
-            } catch (error) {
-                console.error('Error in endCall handler:', error);
-            }
-        });
+        // Driver ignored the order, or the call was ended programmatically after
+        // being answered. Either way the app must not pull itself to the front.
+        RNCallKeep.addEventListener('endCall', () => {});
 
         listenersSetUp = true;
     } catch (error) {
@@ -106,22 +114,28 @@ const fireCall = async (orderId) => {
         // Set up listeners once
         setupCallKeepListeners();
 
-        const order_id = await AsyncStorage.getItem(orderId);
+        // Skip if this order already rang recently, so the socket and push
+        // channels don't ring twice for the same dispatch.
+        const dedupeKey = `${CALL_DEDUPE_PREFIX}${orderId}`;
+        const lastRangAt = parseInt(await AsyncStorage.getItem(dedupeKey), 10);
+        const now = Date.now();
 
-        if (order_id === null) {
-            await AsyncStorage.setItem(orderId, orderId);
+        if (!Number.isNaN(lastRangAt) && now - lastRangAt < CALL_DEDUPE_TTL_MS) {
+            return;
+        }
 
-            // Add a small delay to ensure CallKeep is fully ready
-            if (Platform.OS === 'android') {
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
+        await AsyncStorage.setItem(dedupeKey, String(now));
 
-            try {
-                RNCallKeep.displayIncomingCall(orderId, callerName, callerName);
-            } catch (displayError) {
-                console.error('Error displaying incoming call:', displayError);
-                // Don't throw - just log the error so app doesn't crash
-            }
+        // Add a small delay to ensure CallKeep is fully ready
+        if (Platform.OS === 'android') {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        try {
+            RNCallKeep.displayIncomingCall(orderId, callerName, callerName);
+        } catch (displayError) {
+            console.error('Error displaying incoming call:', displayError);
+            // Don't throw - just log the error so app doesn't crash
         }
     } catch (error) {
         console.error('Error in fireCall:', error);

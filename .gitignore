@@ -98,3 +98,8 @@ vendor
 
 # Yarn lock file
 yarn.lock
+
+# Google Cloud / Firebase service account keys — private credentials, never commit
+*-service-account*.json
+botit-*.json
+service-account*.json

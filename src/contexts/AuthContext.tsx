@@ -411,13 +411,15 @@ export const AuthProvider = ({ children }) => {
         });
     }, [setDriver]);
 
-    // // Sync device token if it changes
-    // // Test on IOS before adding
-    // useEffect(() => {
-    //     if (deviceToken && state.driver) {
-    //         syncDevice(state.driver, deviceToken);
-    //     }
-    // }, [deviceToken, state.driver]);
+    // Sync device token if it changes
+    // The FCM token resolves asynchronously and often arrives after login completes,
+    // in which case the sync at authentication time is skipped and the device is
+    // never registered for push. Re-sync whenever the token or driver changes.
+    useEffect(() => {
+        if (deviceToken && state.driver) {
+            syncDevice(state.driver, deviceToken);
+        }
+    }, [deviceToken, state.driver]);
 
     // Memoize useful props and methods
     const value = useMemo(

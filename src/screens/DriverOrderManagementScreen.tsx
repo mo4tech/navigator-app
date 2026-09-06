@@ -2,19 +2,16 @@ import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { format } from 'date-fns';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { FlatList, RefreshControl } from 'react-native';
 import { Separator, Text, useTheme, XStack, YStack } from 'tamagui';
 import AdhocOrderCard from '../components/AdhocOrderCard';
 import OrderCard from '../components/OrderCard';
 import PastOrderCard from '../components/PastOrderCard';
 import Spacer from '../components/Spacer';
-import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { useOrderManager } from '../contexts/OrderManagerContext';
 import useAppTheme from '../hooks/use-app-theme';
-import useSocketClusterClient from '../hooks/use-socket-cluster-client';
-import fireCall from '../utils/call.js';
 import { formatDuration, formatMeters } from '../utils/format';
 import { translate } from '../utils/localize';
 
@@ -40,9 +37,7 @@ const REFRESH_ORDERS_MS = 6000 * 15; // 15 mins
 const DriverOrderManagementScreen = () => {
     const theme = useTheme();
     const navigation = useNavigation();
-    const listenerRef = useRef();
     const { isDarkMode } = useAppTheme();
-    const { driver } = useAuth();
     const {
         allActiveOrders,
         currentOrders,
@@ -54,7 +49,6 @@ const DriverOrderManagementScreen = () => {
         dismissedOrders,
         setDimissedOrders,
     } = useOrderManager();
-    const { listen } = useSocketClusterClient();
     const { addNotificationListener, removeNotificationListener } = useNotification();
     const todayString = format(new Date(), 'EEEE');
     const activeCurrentOrders = currentOrders.filter((order) => !['completed', 'created', 'canceled'].includes(order.getAttribute('status')));
@@ -63,7 +57,7 @@ const DriverOrderManagementScreen = () => {
     const duration = sumDuration(activeCurrentOrders);
 
     useEffect(() => {
-        const handlePushNotification = async (notification, action) => {
+        const handlePushNotification = async (notification) => {
             const { payload } = notification;
             const id = payload.id;
             const type = payload.type;
@@ -72,10 +66,6 @@ const DriverOrderManagementScreen = () => {
             if (typeof id === 'string' && id.startsWith('order_')) {
                 reloadCurrentOrders();
             }
-
-            if(typeof type === 'string' && type == 'order_dispatched'){
-                fireCall(id)
-            }
         };
 
         addNotificationListener(handlePushNotification);
@@ -83,7 +73,7 @@ const DriverOrderManagementScreen = () => {
         return () => {
             removeNotificationListener(handlePushNotification);
         };
-    }, [addNotificationListener, removeNotificationListener]);
+    }, [addNotificationListener, removeNotificationListener, reloadCurrentOrders]);
 
     useFocusEffect(
         useCallback(() => {
@@ -109,32 +99,6 @@ const DriverOrderManagementScreen = () => {
         }, [])
     );
 
-    useFocusEffect(
-        useCallback(() => {
-            const listenForOrderUpdates = async () => {
-                const listener = await listen(`driver.${driver.id}`, ({ event }) => {
-                    if (typeof event === 'string' && event === 'order.ready') {
-                        reloadCurrentOrders();
-                    }
-                    if (typeof event === 'string' && event === 'order.ping') {
-                        reloadNearbyOrders();
-                    }
-                });
-                if (listener) {
-                    listenerRef.current = listener;
-                }
-            };
-
-            listenForOrderUpdates();
-
-            return () => {
-                if (listenerRef.current) {
-                    listenerRef.current.stop();
-                }
-            };
-        }, [listen, driver.id])
-    );
-
     const handleAdhocDismissal = useCallback(
         (order) => {
             setDimissedOrders((prevDismissedOrders) => [...prevDismissedOrders, order.id]);
@@ -150,7 +114,7 @@ const DriverOrderManagementScreen = () => {
     const renderOrder = ({ item: order }) => {
         const isAdhocOrder = order.getAttribute('adhoc') === true && order.getAttribute('driver_assigned') === null;
         if (isAdhocOrder) {
-            if (dismissedOrders.includes(order.id)) return;
+            if (dismissedOrders.includes(order.id)) return null;
             return (
                 <YStack px='$2' py='$4'>
                     <AdhocOrderCard
@@ -171,7 +135,7 @@ const DriverOrderManagementScreen = () => {
     };
 
     const ActiveOrders = () => {
-        if (!allActiveOrders.length) return;
+        if (!allActiveOrders.length) return null;
 
         return (
             <YStack>

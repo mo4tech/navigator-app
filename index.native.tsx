@@ -24,4 +24,15 @@ messaging().setBackgroundMessageHandler(async (remoteMessage) => {
   return Promise.resolve();  // Ensure the function completes
 });
 
+messaging().onMessage(async (remoteMessage) => {
+  console.log("Message handled in the foreground!", remoteMessage);
+
+  const orderId = String(remoteMessage.data.id);
+  const orderType = remoteMessage.data.type;
+
+  if (orderType === 'order_dispatched') {
+    fireCall(orderId);
+  }
+});
+
 AppRegistry.registerComponent(appName, () => App);

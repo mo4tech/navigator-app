@@ -3,6 +3,11 @@
         "baseUrl": ".",
         "paths": {
             "*": ["*", "*.native", "*.web"]
-        }
+        },
+        "jsx": "react-native",
+        "lib": ["ES2019"],
+        "moduleResolution": "node",
+        "strict": false,
+        "skipLibCheck": true
     }
 }
