@@ -11,13 +11,24 @@ import fireCall from './src/utils/call.js';
 // I18nManager.allowRTL(true);
 // I18nManager.forceRTL(true);
 
+// Fleetbase sends OrderAssigned when a driver is assigned to a non-adhoc order,
+// and OrderDispatched when an adhoc order is broadcast. Both mean "new work for
+// this driver". Matched loosely on purpose: the exact payload string differs
+// between notification classes, and an exact-match miss fails silently -- while
+// completed/canceled/failed still won't match, so they stay quiet.
+const isNewOrderNotification = (type) => {
+  const value = String(type ?? '').toLowerCase();
+
+  return value.includes('assign') || value.includes('dispatch');
+};
+
 messaging().setBackgroundMessageHandler(async (remoteMessage) => {
   console.log("Message handled in the background!", remoteMessage);
 
   const orderId = String(remoteMessage.data.id);
   const orderType = remoteMessage.data.type;
 
-  if (orderType === 'order_dispatched') {
+  if (isNewOrderNotification(orderType)) {
     fireCall(orderId);
   }
 
@@ -30,7 +41,7 @@ messaging().onMessage(async (remoteMessage) => {
   const orderId = String(remoteMessage.data.id);
   const orderType = remoteMessage.data.type;
 
-  if (orderType === 'order_dispatched') {
+  if (isNewOrderNotification(orderType)) {
     fireCall(orderId);
   }
 });

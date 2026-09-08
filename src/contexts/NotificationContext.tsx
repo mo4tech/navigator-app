@@ -3,6 +3,31 @@ import { PermissionsAndroid, Platform } from 'react-native';
 import { Notifications } from 'react-native-notifications';
 import useStorage from '../hooks/use-storage';
 
+// Android 8+ drops any notification posted without a channel, silently and with
+// no error -- which is why new-order alerts arrived without sound.
+export const NEW_ORDER_CHANNEL_ID = 'io.fleetbase.navigator.new-order';
+
+const createAndroidNotificationChannel = () => {
+    if (Platform.OS !== 'android') {
+        return;
+    }
+
+    try {
+        Notifications.setNotificationChannel({
+            channelId: NEW_ORDER_CHANNEL_ID,
+            name: 'New Orders',
+            description: 'Alerts when an order is dispatched to you',
+            importance: 5, // IMPORTANCE_HIGH -- heads-up display, plays sound
+            enableVibration: true,
+            vibrationPattern: [0, 400, 200, 400],
+            enableLights: true,
+            showBadge: true,
+        });
+    } catch (err) {
+        console.warn('Unable to create the new order notification channel:', err);
+    }
+};
+
 const requestAndroidNotificationPermission = async () => {
     if (Platform.OS === 'android' && Platform.Version >= 33) {
         const result = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
@@ -34,6 +59,7 @@ export const NotificationProvider = ({ children }) => {
     useEffect(() => {
         const registerRemoteNotifications = async () => {
             await requestAndroidNotificationPermission();
+            createAndroidNotificationChannel();
             Notifications.registerRemoteNotifications();
         };
 
