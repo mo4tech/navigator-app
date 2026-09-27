@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { Text, XStack, YStack, useTheme } from 'tamagui';
 import OdometerNumber from '../components/OdometerNumber';
+import ShiftToggleButton from '../components/ShiftToggleButton';
 import { useLocation } from '../contexts/LocationContext';
 import { useOrderManager } from '../contexts/OrderManagerContext';
 import useAppTheme from '../hooks/use-app-theme';
@@ -26,6 +27,7 @@ const DriverDashboardScreen = () => {
         <YStack flex={1} bg='$background'>
             <YStack flex={1} padding='$4' gap='$4'>
                 <YStack space='$4'>
+                    <ShiftToggleButton />
                     <WidgetContainer>
                         <XStack>
                             <YStack flex={1}>
