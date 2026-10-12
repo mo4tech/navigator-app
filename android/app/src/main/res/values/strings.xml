@@ -5,5 +5,7 @@
 	<string name="FACEBOOK_APP_ID">12345</string>
 	<string name="FACEBOOK_CLIENT_TOKEN">abc</string>
 	<string name="GOOGLE_MAPS_API_KEY">AIza</string>
-	<string name="TRANSISTORSOFT_LICENSE_KEY">your-license-key-here</string>
+	<!-- TRANSISTORSOFT_LICENSE_KEY is generated from .env by app/build.gradle so the
+	     purchased key is never committed. Do not re-add it here: a resValue and a
+	     literal of the same name are a duplicate-resource build failure. -->
 </resources>

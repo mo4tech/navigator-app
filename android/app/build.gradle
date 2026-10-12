@@ -94,6 +94,22 @@ android {
             appLinkScheme: project.env.get("APP_LINK_PREFIX") ?: "flbnavigator"
         ]
         resValue "string", "build_config_package", "io.fleetbase.navigator"
+
+        // Licence key for react-native-background-geolocation, read from .env so the
+        // purchased key stays out of git. Debug builds are fully functional without it
+        // ("try before you buy"), so an empty value here only costs a logcat warning;
+        // a release build needs the real key or the plugin surfaces the failure to the
+        // driver. The matching <string> in strings.xml was removed -- having both is a
+        // duplicate-resource build failure.
+        resValue "string", "TRANSISTORSOFT_LICENSE_KEY", (project.env.get("TRANSISTORSOFT_LICENSE_KEY") ?: "")
+
+        // React Native ships prebuilt .so files, so `reactNativeArchitectures`
+        // alone does not keep them out of the APK -- every ABI gets packaged.
+        // x86/x86_64 are emulator-only and accounted for 68 MB of a 151 MB
+        // build, which drivers were paying for on mobile data.
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
+        }
     }
     signingConfigs {
         release {
