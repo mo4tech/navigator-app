@@ -32,14 +32,27 @@ export const getCurrentDestinationIndex = (order) => {
     }
 
     const waypoints = order.getAttribute('payload.waypoints', []) ?? [];
-
-    if (waypoints.length === 0) {
-        const status = order.getAttribute('status');
-        return COLLECTED_STATUSES.includes(status) ? locations.length - 1 : 0;
-    }
-
     const currentWaypoint = order.getAttribute('payload.current_waypoint');
     const currentIndex = locations.findIndex((place) => place?.id === currentWaypoint);
+
+    if (waypoints.length === 0) {
+        const collected = COLLECTED_STATUSES.includes(order.getAttribute('status'));
+
+        // The backend never moves the field off the pickup by itself, so a value
+        // still pointing there once the order has been collected is stale rather
+        // than a choice, and the status wins. Any other value was set
+        // deliberately -- the driver switching destination writes it through
+        // order.setDestination() -- so it is honoured.
+        if (currentIndex === 0 && collected) {
+            return locations.length - 1;
+        }
+
+        if (currentIndex >= 0) {
+            return currentIndex;
+        }
+
+        return collected ? locations.length - 1 : 0;
+    }
 
     // Unknown waypoint: aim at the final stop. Falling back to the first one
     // would route a driver who is already underway back to the start.
