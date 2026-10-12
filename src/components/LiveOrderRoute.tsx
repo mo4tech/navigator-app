@@ -1,6 +1,7 @@
 import { YStack } from 'tamagui';
 import { restoreFleetbasePlace, getCoordinates } from '../utils/location';
 import { last, first } from '../utils';
+import { getCurrentDestination, getPreviousDestination } from '../utils/order';
 import useFleetbase from '../hooks/use-fleetbase';
 import OpenStreetMapView from './OpenStreetMapView';
 
@@ -22,9 +23,10 @@ const LiveOrderRoute = ({
     edgePaddingRight = 50,
     scrollEnabled = true,
     focusCurrentDestination = false,
-    // When true, the route reflects the driver's active leg: the destination follows
-    // `payload.current_waypoint` (which the backend advances as the driver updates the
-    // order status), so before pickup it points at the vendor and after pickup at the customer.
+    // When true, the route reflects the driver's active leg, so before pickup it
+    // points at the vendor and after pickup at the customer. See getCurrentDestination:
+    // the backend does not advance `payload.current_waypoint` on a two-stop order, so
+    // the leg is derived from the order status there.
     followCurrentWaypoint = false,
     ...props
 }) => {
@@ -40,15 +42,10 @@ const LiveOrderRoute = ({
     let middleWaypointsSource = [];
 
     if (followCurrentWaypoint) {
-        // Ordered list of every stop the driver moves through.
-        const locations = [pickup, ...waypoints, dropoff].filter(Boolean);
-        const currentWaypoint = order.getAttribute('payload.current_waypoint');
-        const currentIndex = locations.findIndex((place) => place?.id === currentWaypoint);
-
-        // Destination = the leg the driver is currently heading to (fallback to final stop).
-        endWaypoint = currentIndex >= 0 ? locations[currentIndex] : last(locations);
+        // Destination = the leg the driver is currently heading to.
+        endWaypoint = getCurrentDestination(order);
         // Origin = the previous stop (e.g. the vendor once the order is picked up).
-        startWaypoint = currentIndex > 0 ? locations[currentIndex - 1] : first(locations);
+        startWaypoint = getPreviousDestination(order);
     } else {
         // Determine the start waypoint (always use pickup for consistency)
         startWaypoint = !pickup && waypoints.length > 0 ? waypoints[0] : pickup;

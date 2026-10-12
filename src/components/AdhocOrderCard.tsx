@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faBox, faLocationDot, faBan, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { formatDuration, formatMeters, titleize, formatWhatsAppTimestamp } from '../utils/format';
 import { getDistance } from '../utils/location';
+import { getCurrentDestination } from '../utils/order';
 import { Place } from '@fleetbase/sdk';
 import { format as formatDate } from 'date-fns';
 import { useLocation } from '../contexts/LocationContext';
@@ -29,14 +30,7 @@ export const AdhocOrderCard = ({ order, onPress, onAccept, onDismiss }) => {
     const [isAccepting, setIsAccepting] = useState(false);
 
     const destination = useMemo(() => {
-        const pickup = order.getAttribute('payload.pickup');
-        const waypoints = order.getAttribute('payload.waypoints', []) ?? [];
-        const dropoff = order.getAttribute('payload.dropoff');
-        const currentWaypoint = order.getAttribute('payload.current_waypoint');
-        const locations = [pickup, ...waypoints, dropoff].filter(Boolean);
-        const destination = locations.find((place) => place?.id === currentWaypoint) ?? locations[0];
-
-        return new Place(destination);
+        return new Place(getCurrentDestination(order));
     }, [order]);
 
     const distance = useMemo(() => {

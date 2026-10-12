@@ -38,17 +38,11 @@ import { config, showActionSheet } from '../utils';
 import { formatDuration, formatMeters, smartHumanize } from '../utils/format';
 import { translate } from '../utils/localize';
 import { getCoordinates, restoreFleetbasePlace } from '../utils/location';
+import { getCurrentDestination } from '../utils/order';
 import { toast } from '../utils/toast';
 
 const getOrderDestination = (order, adapter) => {
-    const pickup = order.getAttribute('payload.pickup');
-    const waypoints = order.getAttribute('payload.waypoints', []) ?? [];
-    const dropoff = order.getAttribute('payload.dropoff');
-    const currentWaypoint = order.getAttribute('payload.current_waypoint');
-    const locations = [pickup, ...waypoints, dropoff].filter(Boolean);
-    const destination = locations.find((place) => place?.id === currentWaypoint) ?? locations[0];
-
-    return new Place(destination, adapter);
+    return new Place(getCurrentDestination(order), adapter);
 };
 
 const isOldAndroid = Platform.OS === 'android' && Platform.Version <= 31;
@@ -93,14 +87,7 @@ const OrderScreen = ({ route }) => {
     const [currDest, setCurrDest] = useState<any>(null);
 
     const destination = useMemo(() => {
-        const pickup = order.getAttribute('payload.pickup');
-        const waypoints = order.getAttribute('payload.waypoints', []) ?? [];
-        const dropoff = order.getAttribute('payload.dropoff');
-        const currentWaypoint = order.getAttribute('payload.current_waypoint');
-        const locations = [pickup, ...waypoints, dropoff].filter(Boolean);
-        const destination = locations.find((place) => place?.id === currentWaypoint) ?? locations[0];
-
-        return new Place(destination, adapter);
+        return new Place(getCurrentDestination(order), adapter);
     }, [order, adapter]);
 
     const entitiesByDestination = useMemo(() => {

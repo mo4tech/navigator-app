@@ -4,6 +4,7 @@ import { YStack, XStack, Text, styled, useTheme } from 'tamagui';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faBox, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import { formatDuration, titleize, formatWhatsAppTimestamp } from '../utils/format';
+import { getCurrentDestination } from '../utils/order';
 import { Place } from '@fleetbase/sdk';
 import { format as formatDate } from 'date-fns';
 import useFleetbase from '../hooks/use-fleetbase';
@@ -23,14 +24,7 @@ export const PastOrderCard = ({ order, onPress }) => {
     const { trackerData } = useOrderResource(order, { loadEta: false });
 
     const destination = useMemo(() => {
-        const pickup = order.getAttribute('payload.pickup');
-        const waypoints = order.getAttribute('payload.waypoints', []) ?? [];
-        const dropoff = order.getAttribute('payload.dropoff');
-        const currentWaypoint = order.getAttribute('payload.current_waypoint');
-        const locations = [pickup, ...waypoints, dropoff].filter(Boolean);
-        const destination = locations.find((place) => place?.id === currentWaypoint) ?? locations[0];
-
-        return new Place(destination);
+        return new Place(getCurrentDestination(order));
     }, [order]);
 
     return (
