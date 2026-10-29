@@ -221,5 +221,14 @@
         "locationBlockedPrompt": "Location access has been blocked. Please open Settings and enable it to continue.",
         "goToSettings": "Go to Settings",
         "skipForNow": "Skip for now"
+    },
+    "OrderCustomerCard": {
+        "call": "Call",
+        "email": "Email",
+        "chat": "Chat",
+        "unavailableTitle": "Unavailable",
+        "cannotCall": "This phone can't start a call.",
+        "cannotEmail": "No email app is set up on this phone.",
+        "cannotChat": "Couldn't open a chat with this customer. Please try again."
     }
 }

@@ -117,15 +117,22 @@ export const ChatProvider: React.FC = ({ children }) => {
     const createChannelWithCustomer = useCallback(
         async (customer) => {
             if (!adapter) return;
-            setIsLoading(true);
 
-            const name = `${driver.name} x Customer: ${customer.name}`;
+            // Driver is a Fleetbase resource, so the name lives behind
+            // getAttribute -- reading `.name` gave every channel a title
+            // starting "undefined x Customer:".
+            const name = `${driver.getAttribute('name')} x Customer: ${customer.name}`;
 
-            // Check if channel already exists
-            const alreadyExists = channels.some((channel) => channel.name === name);
-            if (alreadyExists) {
-                return;
+            // Hand back the channel that already exists rather than nothing, so
+            // the caller can open it. This also has to happen before the loading
+            // flag is raised -- returning between the two used to leave it stuck
+            // on for the rest of the session.
+            const existingChannel = channels.find((channel) => channel.name === name);
+            if (existingChannel) {
+                return existingChannel;
             }
+
+            setIsLoading(true);
 
             try {
                 const customerChannel = await createChannel({ name: name, participants: [customer.user, driver.getAttribute('user')] });
@@ -136,7 +143,7 @@ export const ChatProvider: React.FC = ({ children }) => {
                 setIsLoading(false);
             }
         },
-        [createChannel, addParticipant]
+        [adapter, channels, createChannel, driver]
     );
 
     const reloadChannel = useCallback(
